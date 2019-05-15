@@ -1,0 +1,94 @@
+1
+进入unpv13e文件夹中
+
+cd ./unpv13e
+./configure     //如果权限不够可以chmod改权限
+
+编译lib文件
+
+cd lib
+make          //出现大量warning,忽略之
+cd ../libfree
+make         //若出现错误，看后面横线内解决办法。无则跳过
+
+inet_ntop.c: In function ‘inet_ntop’: 
+inet_ntop.c:60:9: error: argument ‘size’ doesn’t match prototype 
+size_t size; 
+
+此时在libfree目录下，修改
+
+vim inet_ntop.c  //将第60行的 size_t size 改成 socklen_t size;  
+
+
+
+重新make即修复错误。
+
+继续执行下面命令：
+
+cd ../libgai
+make
+
+
+二、环境搭建
+修改unp.h, 将#include “../config.h”修改为 #include “config.h”,如下：
+
+cd .. //回到主目录
+sudo vim lib/unp.h
+
+继续，拷贝头文件到include
+
+sudo cp config.h /usr/local/include
+sudo cp lib/unp.h /usr/local/include
+
+
+拷贝库文件
+
+sudo cp libunp.a /usr/local/lib
+
+
+
+到此，unix网络编程一书上的代码都可以编译了。
+
+三、示例代码测试
+以示例intro/daytimetcpcli.c为例：
+编译daytimetcpcli.c文件
+
+cd ./intro  
+gcc daytimetcpcli.c -o daytimetcpcli -lunp
+
+运行
+
+./daytimetcpcli 127.0.0.1
+
+    1
+
+测试的时候会出现如下错误
+
+connect error:Connection refused
+
+    1
+
+在ubuntu系统下需要开启daytime，可通过xinetd来实现对服务连接请求的控制。
+
+没有xinetd.d，需要安装
+
+sudo apt-get install xinetd
+然后编辑daytime
+
+vim /etc/xinted.d/daytime
+将文件中的两个disable后面的yes改成no，保存退出
+重启xinted.d
+
+service xinetd restart
+
+    1
+
+再次测试daytimetcpcli例子，
+
+./daytimetcpcli 127.0.0.1
+
+    1
+
+得到正确的结果
+
+24 SEP 2017 17:35:47 CST
